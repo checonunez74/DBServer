@@ -6,8 +6,9 @@ import java.io.RandomAccessFile;
 public class FileHandler {
     private RandomAccessFile dbFile;
 
-    public FileHandler(final String dbFileName) throws FileNotFoundException {
-        this.dbFile = new RandomAccessFile(dbFileName,"rw");
+
+    public FileHandler(final String dbFileName ) throws FileNotFoundException {
+        this.dbFile = new RandomAccessFile("/Users/sergionunez/IdeaProjects/DBServer/Dbserver.db", "rw");
     }
 
     public boolean add(String name,
@@ -70,14 +71,9 @@ public class FileHandler {
     }
 
     public Person readRow(int rowNumber) throws IOException {
-        long bytePosition = Index.getInstance().getBytePosition(rowNumber);
-        if (bytePosition == -1) {
-            return null;
-        }
-
-        byte[] row = this.readRawRecord(bytePosition);
+        byte[] row = this.readRawRecord(rowNumber);
         Person person = new Person();
-        DataInputStream stream = new DataInputStream(new ByteArrayInputStream(row)); //ByteArrayInputStream() creates an error, requires import
+        DataInputStream stream = new DataInputStream(new ByteArrayInputStream(row));
 
         int nameLength = stream.readInt();
         byte[] b = new byte[nameLength];
@@ -103,16 +99,15 @@ public class FileHandler {
         person.description = new String(b);
 
         return person;
-
     }
 
-    private byte[] readRawRecord(long bytePositionOfRow) throws IOException {
-        this.dbFile.seek( bytePositionOfRow);
+    private byte[] readRawRecord(int rowNumber) throws IOException {
+        this.dbFile.seek( 0);
         if (this.dbFile.readBoolean())
             return new byte[0];
-        this.dbFile.seek( bytePositionOfRow + 1);
+        this.dbFile.seek( rowNumber + 1);
         int recordLength = this.dbFile.readInt();
-        this.dbFile.seek( bytePositionOfRow + 5);
+        this.dbFile.seek( rowNumber + 5);
 
         byte[] data = new byte[recordLength];
         this.dbFile.read(data);
